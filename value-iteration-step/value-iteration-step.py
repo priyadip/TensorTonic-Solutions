@@ -1,21 +1,21 @@
-def value_iteration_step(values, transitions, rewards, gamma):
-    new_values = []
+def value_iteration_step(values: list, transitions: list, rewards: list, gamma: float) -> list[float]:
+    """
+    Returns one updated floating-point value for every state.
+    """
+    updated_values = []
 
-    num_states = len(values)
-
-    for s in range(num_states):
-        best = float("-inf")
+    for s in range(len(values)):
+        action_values = []
 
         for a in range(len(rewards[s])):
-            q = rewards[s][a]
+            expected_value = sum(
+                transitions[s][a][next_s] * values[next_s]
+                for next_s in range(len(values))
+            )
 
-            future = 0.0
-            for s_next in range(num_states):
-                future += transitions[s][a][s_next] * values[s_next]
+            q_value = rewards[s][a] + gamma * expected_value
+            action_values.append(q_value)
 
-            q += gamma * future
-            best = max(best, q)
+        updated_values.append(float(max(action_values)))
 
-        new_values.append(best)
-
-    return new_values
+    return updated_values
