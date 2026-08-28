@@ -105,6 +105,7 @@ Verified machine learning implementations completed on [TensorTonic](https://www
 | U-Net Bottleneck | Implement the U-Net bottleneck shape transformation for two unpadded convolutions at the deepest encoder stage. | https://www.tensortonic.com/research/unet/unet-bottleneck |
 | U-Net Decoder Block | Implement U-Net decoder shape transformations for up-convolution, cropped skip concatenation, and two valid convolutions. | https://www.tensortonic.com/research/unet/unet-decoder-block |
 | U-Net Encoder Block | Implement U-Net encoder shape transformations for two unpadded 3x3 convolutions, a skip output, and 2x2 pooling. | https://www.tensortonic.com/research/unet/unet-encoder-block |
+| Complete U-Net Network | Assemble U-Net encoder, bottleneck, decoder, skip-connection, and output stages while tracking valid-convolution shapes. | https://www.tensortonic.com/research/unet/unet-full-network |
 | U-Net Output Layer | Implement the U-Net output layer as a 1x1 channel projection that maps decoder features to per-pixel class logits. | https://www.tensortonic.com/research/unet/unet-output-layer |
 | U-Net Skip Connections | Implement U-Net skip connections by center-cropping encoder features and concatenating them with decoder features. | https://www.tensortonic.com/research/unet/unet-skip-connection |
 | Class Token [CLS] | Prepend a learned classification token to each Vision Transformer patch sequence for image-level prediction. | https://www.tensortonic.com/research/vit/vit-class-token |
