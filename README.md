@@ -102,6 +102,7 @@ Verified machine learning implementations completed on [TensorTonic](https://www
 | Multi-Head Attention | Build NumPy multi-head attention with learned projections, per-head scaled attention, concatenation, and output projection. | https://www.tensortonic.com/research/transformer/transformers-multi-head-attention |
 | Positional Encoding | Implement sinusoidal Transformer positional encodings in NumPy with alternating sine and cosine dimensions. | https://www.tensortonic.com/research/transformer/transformers-positional-encoding |
 | Tokenization | Build a word-level Transformer tokenizer with fixed special-token IDs, sorted vocabulary entries, encoding, and decoding. | https://www.tensortonic.com/research/transformer/transformers-tokenization |
+| U-Net Bottleneck | Implement the U-Net bottleneck shape transformation for two unpadded convolutions at the deepest encoder stage. | https://www.tensortonic.com/research/unet/unet-bottleneck |
 | U-Net Decoder Block | Implement U-Net decoder shape transformations for up-convolution, cropped skip concatenation, and two valid convolutions. | https://www.tensortonic.com/research/unet/unet-decoder-block |
 | U-Net Encoder Block | Implement U-Net encoder shape transformations for two unpadded 3x3 convolutions, a skip output, and 2x2 pooling. | https://www.tensortonic.com/research/unet/unet-encoder-block |
 | U-Net Skip Connections | Implement U-Net skip connections by center-cropping encoder features and concatenating them with decoder features. | https://www.tensortonic.com/research/unet/unet-skip-connection |
