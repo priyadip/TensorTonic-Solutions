@@ -104,6 +104,7 @@ Verified machine learning implementations completed on [TensorTonic](https://www
 | Tokenization | Build a word-level Transformer tokenizer with fixed special-token IDs, sorted vocabulary entries, encoding, and decoding. | https://www.tensortonic.com/research/transformer/transformers-tokenization |
 | U-Net Decoder Block | Implement U-Net decoder shape transformations for up-convolution, cropped skip concatenation, and two valid convolutions. | https://www.tensortonic.com/research/unet/unet-decoder-block |
 | U-Net Encoder Block | Implement U-Net encoder shape transformations for two unpadded 3x3 convolutions, a skip output, and 2x2 pooling. | https://www.tensortonic.com/research/unet/unet-encoder-block |
+| U-Net Skip Connections | Implement U-Net skip connections by center-cropping encoder features and concatenating them with decoder features. | https://www.tensortonic.com/research/unet/unet-skip-connection |
 | Class Token [CLS] | Prepend a learned classification token to each Vision Transformer patch sequence for image-level prediction. | https://www.tensortonic.com/research/vit/vit-class-token |
 | ViT Encoder Block | Build a Vision Transformer encoder block with layer normalization, multi-head attention, MLP, and residual connections. | https://www.tensortonic.com/research/vit/vit-encoder-block |
 | Complete Vision Transformer | Assemble a complete Vision Transformer from patch embedding, class and position tokens, encoder blocks, and classifier. | https://www.tensortonic.com/research/vit/vit-full-network |
