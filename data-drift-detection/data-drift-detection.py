@@ -1,18 +1,20 @@
-def detect_drift(reference_counts, production_counts, threshold):
-    # Normalize histograms
-    ref_total = sum(reference_counts)
-    prod_total = sum(production_counts)
+import numpy as np
 
-    ref_probs = [c / ref_total for c in reference_counts]
-    prod_probs = [c / prod_total for c in production_counts]
+def detect_drift(reference_counts: list, production_counts: list, threshold: float) -> dict:
+    """
+    Returns a dictionary with score and drift_detected.
+    """
+    reference = np.asarray(reference_counts, dtype=float)
+    production = np.asarray(production_counts, dtype=float)
 
-    # Compute TVD
-    tvd = 0.5 * sum(abs(p - q) for p, q in zip(ref_probs, prod_probs))
+    # Normalize each histogram independently
+    p = reference / reference.sum()
+    q = production / production.sum()
 
-    # Drift detection
-    drift_detected = tvd > threshold
+    # Total variation distance
+    score = 0.5 * np.sum(np.abs(p - q))
 
     return {
-        "score": float(tvd),
-        "drift_detected": drift_detected
+        "score": float(score),
+        "drift_detected": bool(score > threshold),
     }
