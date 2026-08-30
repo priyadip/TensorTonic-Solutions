@@ -1,41 +1,43 @@
-import numpy as np
-from collections import Counter
 import math
+from collections import Counter
+import numpy as np
 
-def tfidf_vectorizer(documents):
-    if not documents:
-        return np.zeros((0, 0)), []
-
-    # Tokenize documents
+def tfidf_vectorizer(documents: list[str]) -> dict:
+    """
+    Returns a dictionary with tfidf_matrix and vocabulary.
+    """
     tokenized = [doc.lower().split() for doc in documents]
-    N = len(tokenized)
+    n_docs = len(documents)
 
-    # Build sorted vocabulary
-    vocab = sorted(set(word for doc in tokenized for word in doc))
-    vocab_index = {w: i for i, w in enumerate(vocab)}
+    # Sorted unique vocabulary
+    vocabulary = sorted(set(
+        token for tokens in tokenized for token in tokens
+    ))
+
+    vocab_index = {term: i for i, term in enumerate(vocabulary)}
+    n_terms = len(vocabulary)
 
     # Document frequency
-    df = Counter()
-    for doc in tokenized:
-        for w in set(doc):
-            df[w] += 1
+    df = np.zeros(n_terms, dtype=int)
+    for tokens in tokenized:
+        for term in set(tokens):
+            df[vocab_index[term]] += 1
 
-    # IDF values
-    idf = {w: math.log(N / df[w]) for w in vocab}
+    # Unsmoothed natural-log IDF
+    idf = np.log(n_docs / df)
 
     # TF-IDF matrix
-    tfidf = np.zeros((N, len(vocab)))
+    tfidf = np.zeros((n_docs, n_terms), dtype=float)
 
-    for i, doc in enumerate(tokenized):
-        if not doc:
-            continue
+    for d, tokens in enumerate(tokenized):
+        counts = Counter(tokens)
+        doc_len = len(tokens)
 
-        counts = Counter(doc)
-        total = len(doc)
+        for term, count in counts.items():
+            j = vocab_index[term]
+            tfidf[d, j] = (count / doc_len) * idf[j]
 
-        for w, c in counts.items():
-            j = vocab_index[w]
-            tf = c / total
-            tfidf[i, j] = tf * idf[w]
-
-    return tfidf, vocab
+    return {
+        "tfidf_matrix": tfidf,
+        "vocabulary": vocabulary,
+    }
