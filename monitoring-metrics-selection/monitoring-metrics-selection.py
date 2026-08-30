@@ -1,73 +1,61 @@
-def compute_monitoring_metrics(system_type, y_true, y_pred):
-    import math
+import numpy as np
 
-    n = len(y_true)
-    metrics = []
+def compute_monitoring_metrics(system_type: str, y_true: list, y_pred: list) -> dict:
+    """
+    Returns a dictionary of metrics.
+    """
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
 
     if system_type == "classification":
-        tp = fp = fn = tn = 0
+        tp = np.sum((y_true == 1) & (y_pred == 1))
+        tn = np.sum((y_true == 0) & (y_pred == 0))
+        fp = np.sum((y_true == 0) & (y_pred == 1))
+        fn = np.sum((y_true == 1) & (y_pred == 0))
 
-        for yt, yp in zip(y_true, y_pred):
-            if yt == 1 and yp == 1:
-                tp += 1
-            elif yt == 0 and yp == 1:
-                fp += 1
-            elif yt == 1 and yp == 0:
-                fn += 1
-            else:
-                tn += 1
+        accuracy = (tp + tn) / len(y_true)
 
-        accuracy = (tp + tn) / n if n > 0 else 0.0
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1 = (
-            2 * precision * recall / (precision + recall)
-            if (precision + recall) > 0
-            else 0.0
-        )
+        precision = tp / (tp + fp) if tp + fp > 0 else 0.0
+        recall = tp / (tp + fn) if tp + fn > 0 else 0.0
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0.0
 
-        metrics = [
-            ("accuracy", accuracy),
-            ("f1", f1),
-            ("precision", precision),
-            ("recall", recall),
-        ]
+        return {
+            "accuracy": float(accuracy),
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1": float(f1),
+        }
 
     elif system_type == "regression":
-        abs_err = 0.0
-        sq_err = 0.0
+        errors = y_true.astype(float) - y_pred.astype(float)
 
-        for yt, yp in zip(y_true, y_pred):
-            diff = yt - yp
-            abs_err += abs(diff)
-            sq_err += diff * diff
+        mae = np.mean(np.abs(errors))
+        rmse = np.sqrt(np.mean(errors ** 2))
 
-        mae = abs_err / n if n > 0 else 0.0
-        rmse = math.sqrt(sq_err / n) if n > 0 else 0.0
-
-        metrics = [
-            ("mae", mae),
-            ("rmse", rmse),
-        ]
+        return {
+            "mae": float(mae),
+            "rmse": float(rmse),
+        }
 
     elif system_type == "ranking":
-        paired = list(zip(y_true, y_pred))
-        paired.sort(key=lambda x: x[1], reverse=True)
+        # Stable descending sort: ties retain their original input order.
+        order = np.argsort(-y_pred, kind="stable")
+        top3 = order[:3]
 
-        top_k = paired[:3]
-        relevant_top_k = sum(yt for yt, _ in top_k)
-        total_relevant = sum(y_true)
+        relevant_total = np.sum(y_true > 0)
+        relevant_top3 = np.sum(y_true[top3] > 0)
 
-        precision_at_3 = relevant_top_k / 3
+        precision_at_3 = relevant_top3 / 3.0
         recall_at_3 = (
-            relevant_top_k / total_relevant
-            if total_relevant > 0
+            relevant_top3 / relevant_total
+            if relevant_total > 0
             else 0.0
         )
 
-        metrics = [
-            ("precision_at_3", precision_at_3),
-            ("recall_at_3", recall_at_3),
-        ]
+        return {
+            "precision_at_3": float(precision_at_3),
+            "recall_at_3": float(recall_at_3),
+        }
 
-    return sorted(metrics, key=lambda x: x[0])
+    else:
+        raise ValueError("system_type must be 'classification', 'regression', or 'ranking'")
