@@ -1,40 +1,49 @@
-import numpy as np
-from collections import Counter
 import math
+from collections import Counter
+import numpy as np
 
-def bm25_score(query_tokens, docs, k1=1.2, b=0.75):
+def bm25_score(query_tokens: list[str], docs: list[list[str]], k1: float = 1.2, b: float = 0.75) -> np.ndarray:
     """
-    Returns numpy array of BM25 scores for each document.
+    Returns a NumPy array with one score per document.
     """
-    N = len(docs)
+    n_docs = len(docs)
     doc_lengths = np.array([len(doc) for doc in docs], dtype=float)
-    avgdl = doc_lengths.mean() if N > 0 else 0.0
+    avgdl = doc_lengths.mean()
 
-    # Term frequencies per document
-    doc_tf = [Counter(doc) for doc in docs]
+    # Document frequency for each term
+    df = Counter()
+    for doc in docs:
+        df.update(set(doc))
 
-    # Document frequency for each query term
-    df = {}
-    for term in query_tokens:
-        df[term] = sum(1 for doc in docs if term in doc)
+    scores = np.zeros(n_docs, dtype=float)
 
-    scores = np.zeros(N, dtype=float)
+    # Repeated query terms are counted once
+    for term in set(query_tokens):
+        term_df = df.get(term, 0)
 
-    for i, doc in enumerate(docs):
-        score = 0.0
-        dl = doc_lengths[i]
+        # Unseen query terms contribute nothing
+        if term_df == 0:
+            continue
 
-        for term in query_tokens:
-            tf = doc_tf[i].get(term, 0)
+        idf = math.log(
+            (n_docs - term_df + 0.5) / (term_df + 0.5) + 1
+        )
+
+        for i, doc in enumerate(docs):
+            tf = doc.count(term)
+
             if tf == 0:
                 continue
 
-            # IDF as defined in the prompt
-            idf = math.log((N - df[term] + 0.5) / (df[term] + 0.5) + 1)
+            denominator = (
+                tf
+                + k1 * (1 - b + b * doc_lengths[i] / avgdl)
+            )
 
-            denom = tf + k1 * (1 - b + b * dl / avgdl)
-            score += idf * (tf * (k1 + 1)) / denom
-
-        scores[i] = score
+            scores[i] += (
+                idf
+                * (tf * (k1 + 1))
+                / denominator
+            )
 
     return scores
