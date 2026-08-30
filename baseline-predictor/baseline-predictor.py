@@ -1,51 +1,43 @@
-def baseline_predict(ratings_matrix, target_pairs):
+import numpy as np
+
+def baseline_predict(ratings_matrix: list, target_pairs: list) -> list:
     """
-    Compute baseline predictions using global mean and user/item biases.
+    Returns the baseline predictions for the requested user-item pairs.
     """
+    ratings = np.asarray(ratings_matrix, dtype=float)
 
-    n_users = len(ratings_matrix)
-    n_items = len(ratings_matrix[0])
+    # Global mean from observed ratings only
+    observed = ratings != 0
+    global_mean = ratings.sum() / observed.sum()
 
-    # ---- Collect all non-zero ratings ----
-    all_ratings = []
-    for u in range(n_users):
-        for i in range(n_items):
-            if ratings_matrix[u][i] != 0:
-                all_ratings.append(ratings_matrix[u][i])
+    # User means and biases
+    user_counts = observed.sum(axis=1)
+    user_sums = ratings.sum(axis=1)
+    user_means = np.divide(
+        user_sums,
+        user_counts,
+        out=np.zeros_like(user_sums),
+        where=user_counts != 0
+    )
+    user_bias = np.where(user_counts != 0, user_means - global_mean, 0.0)
 
-    # Global mean
-    mu = sum(all_ratings) / len(all_ratings) if all_ratings else 0.0
+    # Item means and biases
+    item_counts = observed.sum(axis=0)
+    item_sums = ratings.sum(axis=0)
+    item_means = np.divide(
+        item_sums,
+        item_counts,
+        out=np.zeros_like(item_sums),
+        where=item_counts != 0
+    )
+    item_bias = np.where(item_counts != 0, item_means - global_mean, 0.0)
 
-    # ---- User means ----
-    user_means = [None] * n_users
-    for u in range(n_users):
-        vals = [r for r in ratings_matrix[u] if r != 0]
-        user_means[u] = sum(vals) / len(vals) if vals else None
+    # Preserve target_pairs order
+    pairs = np.asarray(target_pairs, dtype=int)
+    predictions = (
+        global_mean
+        + user_bias[pairs[:, 0]]
+        + item_bias[pairs[:, 1]]
+    )
 
-    # ---- Item means ----
-    item_means = [None] * n_items
-    for i in range(n_items):
-        vals = []
-        for u in range(n_users):
-            if ratings_matrix[u][i] != 0:
-                vals.append(ratings_matrix[u][i])
-        item_means[i] = sum(vals) / len(vals) if vals else None
-
-    # ---- Biases ----
-    user_bias = [
-        (user_means[u] - mu) if user_means[u] is not None else 0.0
-        for u in range(n_users)
-    ]
-
-    item_bias = [
-        (item_means[i] - mu) if item_means[i] is not None else 0.0
-        for i in range(n_items)
-    ]
-
-    # ---- Predictions ----
-    predictions = []
-    for u, i in target_pairs:
-        pred = mu + user_bias[u] + item_bias[i]
-        predictions.append(pred)
-
-    return predictions
+    return predictions.tolist()
