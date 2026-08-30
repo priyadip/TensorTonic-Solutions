@@ -1,55 +1,38 @@
 import numpy as np
 
-def naive_bayes_bernoulli(X_train, y_train, X_test):
+def naive_bayes_bernoulli(X_train: list, y_train: list, X_test: list) -> np.ndarray:
     """
-    Bernoulli Naive Bayes log-posterior.
-    Returns numpy array of shape (n_test, n_classes).
+    Returns a NumPy array of unnormalized log posteriors.
+    Columns are ordered by ascending class label.
     """
-
-    # ---- Convert & enforce 2D ----
-    X_train = np.asarray(X_train, dtype=float)
-    X_test  = np.asarray(X_test, dtype=float)
+    X_train = np.asarray(X_train)
     y_train = np.asarray(y_train)
+    X_test = np.asarray(X_test)
 
-    if X_train.ndim == 1:
-        X_train = X_train.reshape(-1, 1)
-    if X_test.ndim == 1:
-        X_test = X_test.reshape(-1, 1)
+    classes = np.sort(np.unique(y_train))
+    n_train = len(y_train)
 
-    n_train, d = X_train.shape
-    n_test = X_test.shape[0]
+    log_posteriors = []
 
-    classes = np.unique(y_train)
-    n_classes = len(classes)
+    for c in classes:
+        X_c = X_train[y_train == c]
+        Nc = len(X_c)
 
-    # ---- Output ----
-    log_post = np.zeros((n_test, n_classes), dtype=float)
+        # Class prior
+        log_prior = np.log(Nc / n_train)
 
-    # ---- Train ----
-    log_priors = np.zeros(n_classes)
-    log_p = np.zeros((n_classes, d))
-    log_1mp = np.zeros((n_classes, d))
+        # Laplace-smoothed probability of feature being 1
+        theta = (np.sum(X_c, axis=0) + 1) / (Nc + 2)
 
-    for idx, c in enumerate(classes):
-        Xc = X_train[y_train == c]
-        nc = Xc.shape[0]
+        # Log likelihood for every test sample
+        log_likelihood = (
+            X_test * np.log(theta)
+            + (1 - X_test) * np.log(1 - theta)
+        ).sum(axis=1)
 
-        # Prior
-        log_priors[idx] = np.log(nc / n_train)
+        log_posteriors.append(log_prior + log_likelihood)
 
-        # Laplace-smoothed Bernoulli parameters
-        p = (np.sum(Xc, axis=0) + 1.0) / (nc + 2.0)
+    # Shape: (n_test, n_classes)
+    result = np.column_stack(log_posteriors)
 
-        log_p[idx] = np.log(p)
-        log_1mp[idx] = np.log(1.0 - p)
-
-    # ---- Predict (log-space) ----
-    for i in range(n_test):
-        x = X_test[i]
-        for j in range(n_classes):
-            log_post[i, j] = (
-                log_priors[j]
-                + np.sum(x * log_p[j] + (1.0 - x) * log_1mp[j])
-            )
-
-    return log_post
+    return np.round(result, 4)
