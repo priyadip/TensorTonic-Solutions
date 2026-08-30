@@ -1,35 +1,40 @@
 import numpy as np
 
-def stratified_split(X, y, test_size=0.2, rng=None):
-    X = np.array(X)
-    y = np.array(y)
+def stratified_split(X: list, y: list, test_size: float = 0.2, seed: int = 42) -> dict:
+    """
+    Returns a dictionary with X_train, X_test, y_train, and y_test.
+    """
+    X = np.asarray(X)
+    y = np.asarray(y)
 
-    train_idx = []
-    test_idx = []
+    rng = np.random.default_rng(seed)
 
-    classes = np.unique(y)
+    test_indices = []
 
-    for c in classes:
-        idx = np.where(y == c)[0]
+    # Find unique classes and split each class independently
+    for cls in np.unique(y):
+        class_indices = np.flatnonzero(y == cls)
+        class_indices = rng.permutation(class_indices)
 
-        if rng is None:
-            np.random.shuffle(idx)
-        else:
-            rng.shuffle(idx)
+        n = len(class_indices)
+        n_test = round(n * test_size)
 
-        n = len(idx)
-        n_test = int(round(n * test_size))
+        # Keep at least one sample in training when possible
+        if n > 1:
+            n_test = min(n_test, n - 1)
 
-        if n_test >= n:
-            n_test = n - 1
-        if n_test < 0:
-            n_test = 0
+        test_indices.extend(class_indices[:n_test])
 
-        test_idx.extend(idx[:n_test])
-        train_idx.extend(idx[n_test:])
+    test_indices = np.sort(np.asarray(test_indices, dtype=int))
 
-   
-    train_idx = np.array(sorted(train_idx))
-    test_idx = np.array(sorted(test_idx))
+    # Everything not selected for test goes to training
+    all_indices = np.arange(len(y))
+    train_indices = np.setdiff1d(all_indices, test_indices)
+    train_indices = np.sort(train_indices)
 
-    return X[train_idx], X[test_idx], y[train_idx], y[test_idx]
+    return {
+        "X_train": X[train_indices],
+        "X_test": X[test_indices],
+        "y_train": y[train_indices],
+        "y_test": y[test_indices],
+    }
