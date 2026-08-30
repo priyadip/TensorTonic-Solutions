@@ -1,74 +1,59 @@
 import math
 
-def gaussian_naive_bayes(X_train, y_train, X_test):
+def gaussian_naive_bayes(X_train: list, y_train: list, X_test: list) -> list:
     """
-    Predict class labels for test samples using Gaussian Naive Bayes.
-    
-    Args:
-        X_train: list of lists (n_train, d)
-        y_train: list (n_train,)
-        X_test: list of lists (n_test, d)
-        
-    Returns:
-        list of predicted class labels
+    Returns a predicted class label for every test sample.
     """
-    eps = 1e-9
-
     n = len(X_train)
-    d = len(X_train[0])
+    n_features = len(X_train[0])
+    epsilon = 1e-9
 
-    # ---- Collect class indices ----
-    classes = list(set(y_train))
-    class_indices = {c: [] for c in classes}
-    for i, c in enumerate(y_train):
-        class_indices[c].append(i)
-
-    # ---- Compute priors, means, variances ----
-    priors = {}
-    means = {}
-    variances = {}
+    # Group samples by class
+    classes = sorted(set(y_train))
+    stats = {}
 
     for c in classes:
-        idxs = class_indices[c]
-        nc = len(idxs)
+        samples = [X_train[i] for i in range(n) if y_train[i] == c]
+        nc = len(samples)
 
-        priors[c] = nc / n
+        means = [
+            sum(row[j] for row in samples) / nc
+            for j in range(n_features)
+        ]
 
-        mu = [0.0] * d
-        for j in range(d):
-            mu[j] = sum(X_train[i][j] for i in idxs) / nc
+        variances = [
+            sum((row[j] - means[j]) ** 2 for row in samples) / nc
+            for j in range(n_features)
+        ]
 
-        var = [0.0] * d
-        for j in range(d):
-            var[j] = sum((X_train[i][j] - mu[j]) ** 2 for i in idxs) / nc
-            var[j] += eps  # numerical stability
+        stats[c] = (nc, means, variances)
 
-        means[c] = mu
-        variances[c] = var
-
-    # ---- Predict ----
     predictions = []
 
     for x in X_test:
         best_class = None
-        best_log_prob = -float("inf")
+        best_log_posterior = float("-inf")
 
         for c in classes:
-            log_prob = math.log(priors[c])
+            nc, means, variances = stats[c]
 
-            for j in range(d):
-                mu = means[c][j]
-                var = variances[c][j]
+            # log prior
+            log_posterior = math.log(nc / n)
 
-                log_prob += (
+            # Gaussian log likelihood for each feature
+            for j in range(n_features):
+                var = variances[j] + epsilon
+                diff = x[j] - means[j]
+
+                log_posterior += (
                     -0.5 * math.log(2 * math.pi * var)
-                    - (x[j] - mu) ** 2 / (2 * var)
+                    - (diff * diff) / (2 * var)
                 )
 
-            if log_prob > best_log_prob:
-                best_log_prob = log_prob
+            if log_posterior > best_log_posterior:
+                best_log_posterior = log_posterior
                 best_class = c
 
-        predictions.append(best_class)
+        predictions.append(int(best_class))
 
     return predictions
