@@ -1,9 +1,9 @@
-from statistics import mean
+import numpy as np
 def simple_moving_average(values: list, window_size: int) -> list:
     """Returns the mean of every complete sliding window."""
-    # v = np.asarray(values)
-    sma = []
-    for i in range( len(values)-window_size+1):
-        sma.append(mean(values[i:i+window_size]))
+    v = np.asarray(values)
+    sma = np.convolve(v, np.ones(window_size)*(1/window_size), mode = 'valid').tolist()
+
     return sma
+
         
